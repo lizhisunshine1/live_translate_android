@@ -1,4 +1,4 @@
-# EyeOpener - 实时悬浮字幕翻译
+# Live Translate - 实时悬浮字幕翻译
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Languages](https://img.shields.io/badge/Language-41-blue)](#支持的语言)
@@ -6,7 +6,7 @@
 
 把任意 App 里的外语语音，变成看得懂的字幕。
 
-EyeOpener 是一个 Android 实时语音翻译应用。识别与翻译的结果会以悬浮字幕的形式显示在任何应用之上——视频、直播、会议、网课、游戏都可以。翻译可选本地离线、自备的云端通道，或大模型上下文润色；配合离线引擎还能完全断网使用。
+Live Translate 是一个 Android 实时语音翻译应用。识别与翻译的结果会以悬浮字幕的形式显示在任何应用之上——视频、直播、会议、网课、游戏都可以。翻译可选本地离线、自备的云端通道，或大模型上下文润色；配合离线引擎还能完全断网使用。
 
 > README in English: [README.en.md](README.en.md)
 >

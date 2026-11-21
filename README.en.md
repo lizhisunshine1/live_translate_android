@@ -1,4 +1,4 @@
-# EyeOpener — Real-time Floating Subtitle Translator
+# Live Translate — Real-time Floating Subtitle Translator
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Languages](https://img.shields.io/badge/Language-41-blue)](#supported-languages)
@@ -6,7 +6,7 @@
 
 Turn speech in any app into subtitles you can actually read.
 
-EyeOpener is a real-time speech translation app for Android. The original speech and its translation appear as a floating subtitle layer on top of any app — videos, livestreams, meetings, online classes, games. Translation can run fully offline, through your own cloud provider, or via an LLM for context-aware polish. With the offline engines, it works with networking completely off.
+Live Translate is a real-time speech translation app for Android. The original speech and its translation appear as a floating subtitle layer on top of any app — videos, livestreams, meetings, online classes, games. Translation can run fully offline, through your own cloud provider, or via an LLM for context-aware polish. With the offline engines, it works with networking completely off.
 
 > 中文版 README：[README.md](README.md)
 

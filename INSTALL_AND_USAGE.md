@@ -11,7 +11,7 @@
 | **调试安装包（当前唯一可用产物）** | `app/build/outputs/apk/debug/EyeOpener.apk` | 直接装到任何一台 Android 手机，装完即用 |
 | 源码 | 仓库根目录 | 需要自己改代码时用 Android Studio 打开 |
 
-> 打包名固定为 `EyeOpener.apk`，包名 `io.github.ztfang.eye`，版本 `1.0`（`versionCode 1`）。
+> 桌面显示名是 **Live Translate**；构建产物文件名沿用历史名 `EyeOpener.apk`（只影响文件名，不影响应用显示名与逻辑）。包名 `io.github.ztfang.eye`，版本 `1.3.5`（`versionCode 9`）。
 > 仓库里**没有**提交 APK（GitHub 单文件 100 MB 限制，这个包有 128 MB），装包请在自己机器上按下面第 3 步构建一次，或直接用我这边已经构建好的这一份。
 
 ### 1. 直接用现成的 APK（最快）
@@ -21,7 +21,7 @@
 1. 用数据线把手机连电脑，`adb push` 或直接文件管理器拖进去；
 2. 手机上打开「文件管理 → 手机 → Download」，点 `EyeOpener.apk`；
 3. 首次会弹「未知来源应用安装」，允许「文件管理」安装即可；
-4. 安装完成，桌面出现 **EyeOpener** 图标。
+4. 安装完成，桌面出现 **Live Translate** 图标（蓝紫渐变底 + 白色对话气泡双箭头）。
 
 命令行方式（手机已开 USB 调试）：
 

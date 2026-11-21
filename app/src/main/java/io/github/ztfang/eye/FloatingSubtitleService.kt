@@ -546,7 +546,7 @@ class FloatingSubtitleService : Service() {
         return NotificationCompat
             .Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
-            .setContentTitle("EyeOpener 字幕运行中")
+            .setContentTitle("Live Translate 字幕运行中")
             .setContentText("点击返回应用")
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)

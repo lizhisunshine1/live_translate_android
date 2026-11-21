@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EyeOpener</string>
+    <string name="app_name">Live Translate</string>
     <string name="app_tagline">Real-time Translation</string>
 
     <!-- Bottom Navigation -->
@@ -291,7 +291,7 @@
     <string name="update_no_notes">No release notes available</string>
     <string name="update_already_latest">You\'re already on the latest version</string>
     <string name="update_check_failed">Update check failed. Please check your network.</string>
-    <string name="update_notification_title">EyeOpener Update</string>
+    <string name="update_notification_title">Live Translate Update</string>
     <string name="update_notification_desc">Downloading new version...</string>
     <string name="update_downloading">Downloading %1$d%%</string>
     <string name="update_tap_install">Tap to install</string>
