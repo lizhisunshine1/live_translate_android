@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<io.github.ztfang.eye.OverlayRootLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/floating_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:elevation="0dp"
+    android:outlineProvider="none"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/floating_subtitle_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
+
+        <!-- 顶部条:动作按钮(右) 和 翻译状态(左) -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- 拖动示意条：居中在顶部条上，提示「这块可以拖」；随功能区一起显隐 -->
+            <View
+                android:id="@+id/drag_handle"
+                android:layout_width="36dp"
+                android:layout_height="3dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/handle_bar" />
+
+            <!-- 翻译状态指示器："实时翻译中"文本 -->
+            <LinearLayout
+                android:id="@+id/translating_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <!-- "实时翻译中"文本 -->
+                <TextView
+                    android:id="@+id/translating_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/floating_translating"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:alpha="0.85" />
+            </LinearLayout>
+
+            <!-- 右侧动作按钮组(设置 / 展开 / 关闭) -->
+            <LinearLayout
+                android:id="@+id/top_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:orientation="horizontal">
+
+                <!-- 设置 -->
+                <LinearLayout
+                    android:id="@+id/btn_settings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_subtitle_settings"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/floating_btn_settings"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- 展开 -->
+                <LinearLayout
+                    android:id="@+id/btn_back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_subtitle_back"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/floating_btn_back"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- 关闭 -->
+                <LinearLayout
+                    android:id="@+id/btn_cancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="0dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_subtitle_close"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/floating_btn_cancel"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- 字幕列表滚动区：内容不足一屏时贴底显示，最新一条固定在下沿 -->
+        <ScrollView
+            android:id="@+id/subtitle_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="8dp"
+            android:fillViewport="true"
+            android:scrollbars="none"
+            android:minHeight="20dp">
+
+            <LinearLayout
+                android:id="@+id/subtitle_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:orientation="vertical">
+            </LinearLayout>
+        </ScrollView>
+
+        <!--
+            错误提示条：翻译失败 / 模型未就绪等 runtimeError。
+            之前在 MainActivity 只用前台 Toast 呈现，用户切在别的 App 上看悬浮字幕时
+            完全看不到失败原因（表现为"只有原文没有译文"且无任何提示），故在此常驻显示。
+        -->
+        <TextView
+            android:id="@+id/subtitle_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="#FFB4A0"
+            android:textSize="11sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!--
+        缩放示意弧：与浮窗外框 20dp 圆角同心，贴在右下角内侧；
+        随功能区一起显隐，本身不参与交互（真实触摸热区见 RESIZE_TOUCH_SIZE_DP，比它大得多）。
+    -->
+    <View
+        android:id="@+id/resize_handle"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="bottom|end"
+        android:background="@drawable/resize_grip_arc" />
+</io.github.ztfang.eye.OverlayRootLayout>

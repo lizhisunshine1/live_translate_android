@@ -1,0 +1,98 @@
+# ===== Android / Gradle 常规忽略 =====
+*.iml
+.gradle/
+.kotlin/
+/build
+**/build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# ===== 签名密钥（绝不可提交到公开仓库）=====
+keystore.properties
+keystore/
+*.jks
+*.keystore
+*.pfx
+*.p12
+
+# ===== 发布产物 / 安装包 =====
+*.apk
+*.aar
+*.aab
+*.ap_
+app/release/
+output-metadata.json
+
+# ===== 日志与缓存 =====
+*.log
+logs/
+
+# ===== 工具 / 工作区内部目录 =====
+# .workbuddy-ai/ 是 WorkBuddy 的实际工作区目录（记录项目记忆与排查笔记，不入库）
+.workbuddy/
+.workbuddy-ai/
+.uploads/
+
+# ===== IntelliJ / Android Studio（保留 .idea/.gitignore）=====
+.idea/
+!.idea/.gitignore
+
+# ===== 系统文件 =====
+.DS_Store
+
+# ===== 内部材料（不公开到 GitHub）=====
+AGENTS.md
+PRD文档.md
+zhihu_article.md
+trae-competition-submission.md
+code_review_report.md
+参考图/
+# docs/ 下本地文档与宣传素材不入库，仅代码进 GitHub
+docs/code-health-report-*.md
+docs/product-hunt/
+# docs/screenshots/ 保留：README 演示图公开
+# docs/screenshots/
+
+# ===== 非核心 / 附加代码（不公开到 GitHub）=====
+eyeopener-website/
+scripts/
+
+# ===== 本机调试残留（不入库）=====
+/ui*.xml
+/u.xml
+/u2.xml
+/a1.xml
+/a2.xml
+/a3.xml
+/a4.xml
+/a5.xml
+/a6.xml
+/a7.xml
+/r1.xml
+/n1.xml
+/n2.xml
+/s1.xml
+/phone_screen*.png
+/app_launch.png
+/rec*.png
+/vocab1.png
+/del1.png
+/del2.png
+/dl1.png
+/dl2.png
+/state*.png
+/st.png
+/st2.png
+/t1.png
+/t2.png
+/t3.png
+/word1.png
+/word2.png
+/speech.wav
+/session1.json
+/session2.json
+install_out.txt
+EyeOpener-Translator/
+
