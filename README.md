@@ -12,6 +12,8 @@ Live Translate 是一个 Android 实时语音翻译应用。识别与翻译的�
 >
 > 装机与上手（安装包位置、小米装不上怎么办、记录本/难词/复习/词典怎么用）：[INSTALL_AND_USAGE.md](INSTALL_AND_USAGE.md)
 > 记录功能技术说明（存储布局、SM-2 参数、词典重建）：[docs/RECORDS.md](docs/RECORDS.md)
+> 运行逻辑与参数（采集→VAD→识别→翻译→记录→复习，含「改参数去哪改」）：[docs/RUNTIME_PIPELINE.md](docs/RUNTIME_PIPELINE.md)
+> 需求说明书（功能需求 + 模型与参数）：[docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)
 
 ![Floating subtitle demo](docs/screenshots/overlay.png)
 
