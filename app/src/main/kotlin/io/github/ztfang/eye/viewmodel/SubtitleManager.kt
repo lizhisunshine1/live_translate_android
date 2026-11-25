@@ -1003,6 +1003,27 @@ class SubtitleManager
         }
 
         /**
+         * VAD 判定长静音、准备暂停送音时调用：把屏幕上这半句**直接定稿落地**。
+         *
+         * 不能走 [flushPendingDraft]：那一条会把「没有句号的半句」塞进 carryOverText，
+         * 同时把当前行清空 —— 用户看到的就是「字幕整块消失」，要等下一段语音才重新冒出来；
+         * 而且 carryOverText 会被带到下一段（甚至下一个视频）里，拼出毫无关系的长句。
+         * 长静音已经说明这一句不会再往下说了，直接当一行定稿上屏、翻译、落记录更合理。
+         */
+        private fun commitVisibleDraft() {
+            val pending = currentLineText().trim()
+            if (pending.isBlank()) {
+                updateSourceText("", isFinal = false)
+                return
+            }
+            if (BuildConfig.DEBUG) Log.d(LOG_TAG, "commitVisibleDraft: 长静音定稿 \"$pending\"")
+            emitRow(pending)
+            resetSegmentState()
+            // 已定稿，不再把残句带到下一段，避免跨段/跨音频拼接
+            carryOverText = ""
+        }
+
+        /**
          * 引擎改写文本后重新定位「已收口到哪」：用上一行末尾 4/3/2/1 个词依次当锚点，
          * 取最后一次出现的位置。都对不上就从头再来（重复内容由去重兜底吃掉）。
          */
@@ -2189,8 +2210,12 @@ class SubtitleManager
                     val shortsRead = record.read(audioBuffer, 0, audioBuffer.size)
                     if (!isRecording) break
                     if (shortsRead > 0) {
-                        // 语音落盘：16k/16bit/单声道原始帧直接进 wav（默认会话结束即删除）
-                        transcriptRepository.appendAudio(audioBuffer, shortsRead)
+                        // 语音落盘：16k/16bit/单声道原始帧直接进 wav。
+                        // 这里必须兜住异常：写盘失败（存储被拔/满/权限变化）只该丢这一段录音，
+                        // 不能让整个采集循环退出 —— 那会让浮窗一直空着、且没有任何报错。
+                        runCatching {
+                            transcriptRepository.appendAudio(audioBuffer, shortsRead)
+                        }.onFailure { Log.w(LOG_TAG, "音频落盘失败（不影响字幕）", it) }
                         System.arraycopy(audioBuffer, 0, accumulateBuffer, accumulateOffset, shortsRead)
                         accumulateOffset += shortsRead
 
@@ -2215,7 +2240,16 @@ class SubtitleManager
 
                             // ===== VAD 检测 =====
                             val vadResult = vadEngine.processAudio(frameBuffer)
-                            if (vadResult.hasSpeech) {
+                            // 能量兜底：Silero 对偏小的音量、音乐垫底的视频、以及被系统压低的
+                            // 应用内声音都会判成静音；一旦漏判超过 2s 就会整段停止给 ASR 送音，
+                            // 用户听到的是「有声音、没字幕」。这一帧只要够响，就同样按疑似语音处理。
+                            var energySum = 0.0
+                            for (i in 0 until FRAME_SIZE) {
+                                val v = frameBuffer[i] / 32768.0
+                                energySum += v * v
+                            }
+                            val loudEnough = kotlin.math.sqrt(energySum / FRAME_SIZE).toFloat() >= VAD_FALLBACK_RMS
+                            if (vadResult.hasSpeech || loudEnough) {
                                 vadSpeechFrames++
                                 vadSilentFrames = 0
                                 if (vadSpeechFrames >= VAD_SPEECH_DEBOUNCE_FRAMES && !debouncedVadState) {
@@ -2239,7 +2273,10 @@ class SubtitleManager
                                                 "VAD 语音恢复: 暂停前有未完成句，补 final 后 reset（跳过预卷回填）: " +
                                                     "\"$pendingUnconfirmed\"",
                                             )
-                                            scope.launch { flushPendingDraft() }
+                                            // 定稿落地而不是 flushPendingDraft：后者会把没有句号的半句
+                                            // 塞进 carryOverText 并清空当前行，屏幕就空白了，等下一段
+                                            // 语音才重新冒出来；残句还会被带进下一段拼成怪句。
+                                            scope.launch { commitVisibleDraft() }
                                         } else {
                                             Log.i(
                                                 LOG_TAG,
@@ -2271,7 +2308,11 @@ class SubtitleManager
                                         currentAsrEngine.resetStream()
                                     }
                                 }
-                                if (vadSilentFrames >= VAD_SILENT_DEBOUNCE_FRAMES && debouncedVadState) {
+                                // 注意：这里不再要求「之前检测到过语音」才切 SILENT。
+                                // 旧实现里 debouncedVadState 初始为 false，导致从头就没声音时
+                                // 状态永远停在 LISTENING，浮窗既不显示字幕、也不显示「未检测到声音」，
+                                // 只剩一个空框，用户没法判断到底是不是在工作。
+                                if (vadSilentFrames >= VAD_SILENT_DEBOUNCE_FRAMES) {
                                     debouncedVadState = false
                                     _vadState.value = VadState.SILENT
                                 }
@@ -2411,7 +2452,10 @@ class SubtitleManager
                     AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT,
                 )
-            val bufferSize = maxOf(minBuffer, FRAME_SIZE * 2 * 2) // 至少2帧缓冲
+            // 缓冲至少 480ms（16 帧）：解码是在同一个采集线程里同步做的，
+            // 一次 encoder 推理可能占几十~上百 ms，缓冲区只有 2 帧(60ms) 时必然溢出丢帧，
+            // 表现为识别时好时坏/整段没字幕、录音 wav 里也有断音。
+            val bufferSize = maxOf(minBuffer, FRAME_SIZE * 2 * 2 * 16)
             return AudioRecord(
                 MediaRecorder.AudioSource.VOICE_RECOGNITION,
                 SAMPLE_RATE,
@@ -2444,7 +2488,9 @@ class SubtitleManager
                         AudioFormat.CHANNEL_IN_MONO,
                         AudioFormat.ENCODING_PCM_16BIT,
                     )
-                val bufferSize = maxOf(minBuffer, FRAME_SIZE * 2 * 2)
+                // 与麦克风同因：解码占住采集线程时，应用内声音的 producer 不会等你，
+                // 缓冲太小就会成片丢样，所以统一放大到 480ms。
+                val bufferSize = maxOf(minBuffer, FRAME_SIZE * 2 * 2 * 16)
                 AudioRecord
                     .Builder()
                     .setAudioFormat(
@@ -2518,6 +2564,17 @@ class SubtitleManager
             /** VAD 停止 ASR 帧数：连续 60 帧静音(~2s) 停止送入 ASR, 节省计算。
              *  语音恢复时自动 resetStream 并重新送入 */
             private const val VAD_STOP_ASR_FRAMES = 60 // ~2s 停止 ASR
+
+            /**
+             * 能量兜底阈值（RMS，归一化到 0..1）。
+             *
+             * Silero VAD 对「音量偏小 / 音乐垫底 / 应用内声音被系统压低」的音频会判成静音，
+             * 一旦判静音超过 2s 就会停止给 ASR 送音，表现为「音频明明在放，字幕却一直不出」。
+             * 这里再加一道简单的音量判定：只要这一帧足够响，就当作疑似语音，走和 VAD
+             * 相同的防抖/恢复流程，避免整段被 VAD 误杀。0.02 ≈ -34 dBFS，
+             * 安静房间底噪通常远低于它，正常说话即使在低音量下也高于它。
+             */
+            private const val VAD_FALLBACK_RMS = 0.02f
 
             /** 翻译防抖延迟（毫秒）：避免短时间内重复触发翻译请求 */
             private const val TRANSLATE_DEBOUNCE_MS = 200L

@@ -69,7 +69,9 @@ flowchart LR
 | 采样率 | 16000 Hz | `SAMPLE_RATE` |
 | 位深 / 声道 | PCM 16bit / 单声道 | `ENCODING_PCM_16BIT` / `CHANNEL_IN_MONO` |
 | 帧长 | 480 样本 = 30 ms | `FRAME_SIZE` / `FRAME_MS` |
-| 缓冲 | `max(minBufferSize, FRAME_SIZE*4)` | — |
+| 缓冲 | `max(minBufferSize, FRAME_SIZE*2*2*16)` = 至少 480 ms | — |
+
+> 缓冲按**字节**算：`FRAME_SIZE*2` 是一帧的字节数（16bit），再乘 16 帧 ≈ 480 ms。解码是在采集线程里同步做的，encoder 推理一次可能占几十到上百 ms，缓冲太小时 AudioRecord 会成片丢样（表现为识别时好时坏、整段没字幕）。
 
 - 麦克风：`MediaRecorder.AudioSource.VOICE_RECOGNITION`（系统 AGC/AEC/NS）。
 - 应用内声音：Android 10+ `AudioPlaybackCaptureConfiguration` + `MediaProjection`，每次开启需重新授权录屏。
@@ -100,8 +102,14 @@ flowchart LR
 | `VAD_SOFT_SILENCE_FRAMES` | 15 | 480 ms | 软静音，让 Vosk 侧收口 |
 | `VAD_SILENT_DEBOUNCE_FRAMES` | 28 | ≈896 ms | 认定句末，提交字幕 |
 | `VAD_STOP_ASR_FRAMES` | 60 | ≈2 s | 长静音暂停送音，省 CPU |
+| `VAD_FALLBACK_RMS` | — | 0.02（≈-34 dBFS） | 能量兜底：VAD 漏判但这一帧够响，也算疑似语音 |
 
 要点：**VAD 不切句**。切句由 ASR endpoint 与标点决定；VAD 只决定“送不送音”和 UI 的说话/静音指示。VAD 初始化失败会退化成“始终有语音”，保证 ASR 不哑火。
+
+两条“字幕不能消失”的约定：
+
+- 长静音导致暂停时，屏幕上的半句在**恢复送音时直接定稿**（`commitVisibleDraft`），不再走 `flushPendingDraft` 的“塞进 carryOver、清空当前行”路径 —— 否则会出现“字幕整块消失、下一段语音才重新冒出来”，残句还会被带进下一段拼成怪句。
+- 没有语音时浮窗显示“未检测到声音”，而不是只剩一个空框；`SILENT` 状态不再要求“之前检测到过语音”。
 
 ---
 

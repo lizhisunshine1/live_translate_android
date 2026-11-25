@@ -199,8 +199,11 @@ private fun WelcomePage() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // 大图标：使用桌面图标（蓝紫渐变+白色眼睛）
+        // 注意必须用位图 drawable，不能用 R.mipmap.ic_launcher：自适应图标
+        // （mipmap-anydpi-v26/ic_launcher.xml）在 Compose painterResource 里会抛
+        // IllegalArgumentException（只支持 VectorDrawable 或 PNG/JPG/WEBP），首启直接崩溃。
         Image(
-            painter = painterResource(id = R.mipmap.ic_launcher),
+            painter = painterResource(id = R.drawable.app_icon),
             contentDescription = null,
             modifier = Modifier.size(96.dp),
             contentScale = ContentScale.Crop,
